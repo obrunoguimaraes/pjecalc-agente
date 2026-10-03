@@ -179,6 +179,24 @@ def main() -> int:
                 wait_until="domcontentloaded",
                 timeout=30000,
             )
+
+            # Registrar a versão exibida na interface. O MVP foi adaptado
+            # inicialmente para PJe-Calc Cidadão 2.16.0; não bloqueamos
+            # automaticamente outras versões, mas deixamos explícito no log.
+            try:
+                body_text = page.locator("body").inner_text(timeout=5000)
+                import re
+                m = re.search(r"Vers[aã]o\s*:?\s*(\d+\.\d+\.\d+)", body_text, re.I)
+                versao = m.group(1) if m else "desconhecida"
+                print(f"Versão PJe-Calc detectada: {versao}")
+                if versao != "2.16.0":
+                    print(
+                        "ATENÇÃO: seletores foram revisados para 2.16.0; "
+                        "outra versão exige validação antes de produção."
+                    )
+            except Exception as exc:
+                print(f"Versão PJe-Calc: não foi possível detectar ({exc})")
+
             aplicador = AplicadorPJECalc(
                 page=page,
                 base_url=args.base_url,
