@@ -942,11 +942,15 @@ class AplicadorPJECalc:
             self._fill_text("anoProcessoBusca", p.ano)
             self._fill_text("regiaoBusca", p.regiao)
             self._fill_text("varaProcessoBusca", p.vara)
-            _buscar_e_abrir("", "")
+            if not _buscar_e_abrir("", ""):
+                self.log("  ✗ processo não encontrado na busca PJE — execução bloqueada")
+                return False
         elif dbg.get("modoB"):
             self.log("  → modo B: formulário de busca de calc — preenchendo searchText")
             # formulario:numero está DISABLED neste form; usar searchText (busca livre)
-            _buscar_e_abrir("searchText", p.numero)
+            if not _buscar_e_abrir("searchText", p.numero):
+                self.log("  ✗ cálculo não encontrado — execução bloqueada")
+                return False
 
         # ── Aba "Dados do Processo" (campos editáveis pós-busca) ──
         # Em nova calc os campos reclamante/reclamado são preenchidos pela busca PJE
