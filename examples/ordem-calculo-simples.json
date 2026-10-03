@@ -1,0 +1,124 @@
+{
+  "processo": {
+    "numero": "0000000",
+    "digito": "00",
+    "ano": "2026",
+    "regiao": "02",
+    "vara": "0001",
+    "estado": "25",
+    "municipio": "SAO PAULO",
+    "reclamante_nome": "RECLAMANTE TESTE",
+    "reclamado_nome": "RECLAMADO TESTE",
+    "data_admissao": "01/01/2025",
+    "data_demissao": "30/09/2026",
+    "data_ajuizamento": "01/10/2026",
+    "data_inicio_calculo": "01/09/2026",
+    "data_termino_calculo": "30/09/2026",
+    "prescricao_quinquenal": false,
+    "prescricao_fgts": false,
+    "apuracao_prazo_aviso_previo": "NAO_APURAR",
+    "projeta_aviso_indenizado": false,
+    "zera_valor_negativo": false,
+    "considera_feriado_estadual": false,
+    "considera_feriado_municipal": false,
+    "sabado_dia_util": false
+  },
+  "historico_salarial": [],
+  "faltas": [],
+  "ferias": [],
+  "verbas": [
+    {
+      "lancamento": "MANUAL",
+      "expresso_alvo": null,
+      "parametros": {
+        "descricao": "TESTE - VERBA FIXA INFORMADA",
+        "assuntos_cnj": "2581",
+        "tipo_de_verba": "PRINCIPAL",
+        "tipo_variacao_da_parcela": "FIXA",
+        "caracteristica_verba": "COMUM",
+        "ocorrencia_pagto": "MENSAL",
+        "ocorrencia_ajuizamento": "OCORRENCIAS_VENCIDAS",
+        "periodo_inicial": "01/09/2026",
+        "periodo_final": "30/09/2026",
+        "valor": "INFORMADO",
+        "valor_informado": "1.000,00",
+        "irpf": false,
+        "inss": false,
+        "fgts": false,
+        "previdencia_privada": false,
+        "pensao_alimenticia": false,
+        "tipo_da_base_tabelada": null,
+        "tipo_de_divisor": "INFORMADO",
+        "outro_valor_do_divisor": "1,00",
+        "outro_valor_do_multiplicador": "1,00",
+        "tipo_da_quantidade": "INFORMADA",
+        "valor_informado_da_quantidade": "1,00",
+        "aplicar_proporcionalidade_quantidade": false,
+        "tipo_do_valor_pago": "INFORMADO",
+        "valor_informado_pago": "0,00",
+        "aplicar_proporcionalidade_valor_pago": false,
+        "zera_valor_negativo": false,
+        "excluir_falta_justificada": false,
+        "excluir_falta_nao_justificada": false,
+        "excluir_ferias_gozadas": false,
+        "dobra_valor_devido": false,
+        "aplicar_proporcionalidade_a_base": false,
+        "comentarios": "MVP-01 AG Executor - teste sintético"
+      },
+      "ocorrencias": [
+        {
+          "indice": 0,
+          "ativo": true,
+          "termo_div": "1,00",
+          "termo_mult": "1,00",
+          "termo_quant": "1,00",
+          "valor_devido": "1.000,00",
+          "dobra": false
+        }
+      ],
+      "reflexos": []
+    }
+  ],
+  "cartao_de_ponto": {
+    "apurar": false
+  },
+  "fgts": {
+    "apurar": false
+  },
+  "contribuicao_social": {
+    "apurar": false
+  },
+  "imposto_renda": {
+    "apurar": false
+  },
+  "honorarios": [],
+  "custas": {
+    "reclamado_conhecimento": "NAO_SE_APLICA",
+    "reclamado_liquidacao": "NAO_SE_APLICA",
+    "reclamante_conhecimento": "NAO_SE_APLICA",
+    "percentual": "2",
+    "custas_fixas_atos_oj_urbana": false,
+    "custas_fixas_atos_oj_rural": false,
+    "custas_fixas_agravo_instrumento": false,
+    "custas_fixas_agravo_peticao": false,
+    "custas_fixas_impugnacao_sentenca": false,
+    "custas_fixas_embargos_arrematacao": false,
+    "custas_fixas_embargos_execucao": false,
+    "custas_fixas_embargos_terceiros": false,
+    "custas_fixas_recurso_revista": false,
+    "autos_5pct": [],
+    "armazenamento_0_1pct": []
+  },
+  "correcao_juros": {
+    "indice_correcao": "SEM_CORRECAO",
+    "combinar_com_outro_indice": false,
+    "ignorar_taxa_negativa": false,
+    "aplicar_juros_pre_judicial": false,
+    "taxa_juros": "SEM_JUROS",
+    "combinar_outra_tabela_juros": false,
+    "tabelas_juros_adicionais": [],
+    "base_juros": "VERBA",
+    "aplicar_ec_113": false,
+    "sumula_439_juros_desde_ajuizamento": false
+  }
+}
