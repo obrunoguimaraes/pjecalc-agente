@@ -48,6 +48,8 @@ Isso é necessário porque o schema legado possui alguns defaults ativos (FGTS, 
 
 ## Execução local
 
+O arquivo `examples/ordem-calculo-simples.json` é um **template técnico**. Antes do primeiro teste, substitua os campos de processo/reclamante/reclamado por um processo real acessível na instalação local do PJe-Calc. O aplicador bloqueia a execução se a busca do processo não retornar resultado.
+
 Com o PJe-Calc Cidadão já iniciado e respondendo na porta configurada:
 
 ```bash
