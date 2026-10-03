@@ -762,83 +762,118 @@ class AplicadorPJECalc:
             pass
 
     def _iniciar_novo_calculo(self) -> bool:
-        """Navega para o formulário de busca de cálculos via 'Cálculo > Buscar' ou 'Novo'.
-        Retorna True quando o formulário estiver visível.
-        O conv_id real é obtido depois de selecionar/salvar."""
+        """Abre explicitamente o fluxo "Criar Novo Cálculo".
+
+        PJE-Calc 2.16.0 (tela inicial):
+          - botão central "Criar Novo Cálculo"
+          - item lateral/menu `li#li_calculo_novo`
+
+        Regra do AG Executor:
+          - nunca substituir "Novo" por "Buscar Cálculo";
+          - URL direta é apenas fallback técnico;
+          - só retornar True se o formulário de criação/busca de processo
+            realmente tiver sido renderizado.
+        """
         try:
-            if "principal.jsf" not in self._page.url and "calculo.jsf" not in self._page.url:
+            if "principal.jsf" not in self._page.url:
                 self._page.goto(
                     f"{self._base_url}/pages/principal.jsf",
-                    wait_until="domcontentloaded", timeout=15000
+                    wait_until="domcontentloaded",
+                    timeout=15000,
                 )
                 self._aguardar_ajax(4000)
 
-            # Logar DOM para diagnóstico: IDs dos <li> visíveis no topo
-            dom_diag = self._page.evaluate(
-                """() => ({
-                    url: location.href,
-                    liIds: [...document.querySelectorAll('li')].map(e=>e.id).filter(Boolean).slice(0,20),
-                    aTexts: [...document.querySelectorAll('a')].map(e=>(e.textContent||'').trim())
-                             .filter(t=>t&&t.length<30).slice(0,30),
-                })"""
-            )
-            self.log(f"  [DOM] url={dom_diag['url']}")
-            self.log(f"  [DOM] liIds={dom_diag['liIds']}")
-            self.log(f"  [DOM] links={dom_diag['aTexts']}")
+            self.log("  → abrindo 'Criar Novo Cálculo'")
 
-            # Tentar hover Playwright real no "Cálculo" do menu, depois clicar Buscar/Novo
-            clicou = None
-            for sel_pai in ['li#li_calculo', 'a:has-text("Cálculo")', 'span:has-text("Cálculo")']:
-                try:
-                    el = self._page.locator(sel_pai).first
-                    if el.count() > 0:
-                        el.hover(timeout=3000)
-                        self._page.wait_for_timeout(600)
-                        break
-                except Exception:
-                    pass
-
-            # Agora tentar clicar Buscar ou Novo via JS
+            # Tier 1 — botão central visível da home (PJe-Calc 2.16.0)
             clicou = self._page.evaluate(
                 """() => {
-                    const buscar = document.querySelector('li#li_calculo_buscar a')
-                        || document.querySelector('li#li_calculo_buscar')
-                        || [...document.querySelectorAll('a')].find(a =>
-                            /^buscar$/i.test((a.textContent||'').trim()));
-                    if (buscar) { buscar.click(); return 'buscar:' + (buscar.id || buscar.textContent?.trim()); }
-                    const novo = document.querySelector('li#li_calculo_novo a')
-                        || document.querySelector('li#li_calculo_novo')
-                        || [...document.querySelectorAll('a')].find(a =>
-                            /^novo$/i.test((a.textContent||'').trim()));
-                    if (novo) { novo.click(); return 'novo:' + (novo.id || novo.textContent?.trim()); }
-                    return null;
+                    const norm = s => (s || '').replace(/\\s+/g, ' ').trim().toUpperCase();
+                    const nodes = [
+                        ...document.querySelectorAll(
+                            'a, button, input[type="button"], input[type="submit"], '
+                            + 'div[onclick], span[onclick], li[onclick]'
+                        )
+                    ];
+                    const el = nodes.find(e => {
+                        const txt = norm(e.value || e.textContent || e.getAttribute('title') || '');
+                        return txt === 'CRIAR NOVO CÁLCULO' || txt === 'CRIAR NOVO CALCULO';
+                    });
+                    if (!el) return null;
+                    el.click();
+                    return 'home:' + (el.id || el.value || el.textContent || '').trim();
                 }"""
             )
+
+            # Tier 2 — item do menu lateral Cálculo > Novo
             if not clicou:
-                # Último fallback: URL direta — cria nova conversa Seam
+                try:
+                    pai = self._page.locator("li#li_calculo").first
+                    if pai.count() > 0:
+                        pai.hover(timeout=3000)
+                        self._page.wait_for_timeout(400)
+                except Exception:
+                    pass
+                clicou = self._page.evaluate(
+                    """() => {
+                        const novo = document.querySelector('li#li_calculo_novo a')
+                            || document.querySelector('li#li_calculo_novo');
+                        if (!novo) return null;
+                        novo.click();
+                        return 'menu:' + (novo.id || (novo.textContent || '').trim());
+                    }"""
+                )
+
+            # Tier 3 — fallback URL direta. Não usar "Buscar Cálculo".
+            if not clicou:
+                self.log("  ↻ botão Novo não localizado — tentando URL direta")
                 self._page.goto(
                     f"{self._base_url}/pages/calculo/calculo.jsf",
-                    wait_until="domcontentloaded", timeout=15000
+                    wait_until="domcontentloaded",
+                    timeout=15000,
                 )
-            self._aguardar_ajax(6000)
+                clicou = "url-direta"
+
+            self._aguardar_ajax(8000)
             self._page.wait_for_timeout(1000)
-            tem_busca = self._page.evaluate(
-                """() => !!(
-                    document.querySelector('input[id$="numeroProcessoBusca"]') ||
-                    document.querySelector('input[id="formulario:idCalculo"]')
-                )"""
+
+            estado = self._page.evaluate(
+                """() => {
+                    const vis = sel => {
+                        const el = document.querySelector(sel);
+                        return !!(el && el.offsetParent !== null);
+                    };
+                    return {
+                        buscaProcesso: vis('input[id$="numeroProcessoBusca"]'),
+                        edicaoDireta: vis('input[id$="reclamanteNome"]'),
+                        buscaCalculo: vis('input[id="formulario:idCalculo"]'),
+                        url: location.href,
+                        inputs: [...document.querySelectorAll('input[type="text"]')]
+                            .filter(e => e.offsetParent !== null)
+                            .map(e => e.id)
+                            .filter(Boolean)
+                            .slice(0, 12),
+                    };
+                }"""
             )
-            # Logar DOM pós-navegação
-            dom_pos = self._page.evaluate(
-                """() => ({
-                    url: location.href,
-                    inputs: [...document.querySelectorAll('input[type="text"]')]
-                             .map(e=>e.id).filter(Boolean).slice(0,10),
-                })"""
+
+            # Para criação nova aceitamos:
+            # A) tela de busca de processo; ou
+            # C) edição direta de um novo cálculo.
+            # "Busca de cálculo existente" sozinha NÃO caracteriza sucesso.
+            ok = bool(estado.get("buscaProcesso") or estado.get("edicaoDireta"))
+            self.log(
+                f"  {'✓' if ok else '✗'} novo cálculo: via={clicou} "
+                f"buscaProcesso={estado.get('buscaProcesso')} "
+                f"edicaoDireta={estado.get('edicaoDireta')} "
+                f"buscaCalculo={estado.get('buscaCalculo')}"
             )
-            self.log(f"  ✓ nav busca: clicou={clicou} tem_busca={tem_busca}")
-            self.log(f"  [DOM pós] url={dom_pos['url']} inputs={dom_pos['inputs']}")
-            return True  # o fill dos campos de busca ocorre em aplicar_dados_processo
+            self.log(f"  [DOM novo] url={estado.get('url')} inputs={estado.get('inputs')}")
+
+            if not ok:
+                self.log("  ✗ fluxo 'Criar Novo Cálculo' não abriu formulário válido")
+                return False
+            return True
         except Exception as e:
             self.log(f"  ⚠ _iniciar_novo_calculo: {e}")
             return False
