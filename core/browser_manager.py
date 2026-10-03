@@ -145,7 +145,7 @@ class BrowserManager:
         self._browser = self._playwright.firefox.launch(headless=self._headless)
         self._context = self._browser.new_context()
         self._page = self._context.new_page()
-        logger.info("browser_started", headless=self._headless)
+        logger.info("browser_started headless=%s", self._headless)
 
     def stop(self) -> None:
         """Fecha page, context, browser e playwright com tratamento de erros."""
@@ -159,7 +159,7 @@ class BrowserManager:
                 try:
                     obj.close()
                 except Exception as e:
-                    logger.debug(f"close_{name}_error", error=str(e))
+                    logger.debug("close_%s_error: %s", name, e)
         self._page = self._context = self._browser = self._playwright = None
         logger.info("browser_stopped")
 
@@ -200,7 +200,7 @@ class BrowserManager:
                 if self._page:
                     body = self._page.locator("body").text_content() or ""
                     if "ViewExpired" in body or "expired" in body.lower():
-                        logger.warning("viewstate_expired", func=func_name)
+                        logger.warning("viewstate_expired func=%s", func_name)
                         self._page.reload()
                         self._page.wait_for_load_state("networkidle")
                         return True
@@ -211,10 +211,10 @@ class BrowserManager:
         # Crash do Firefox → screenshot + reiniciar
         screenshot_path = self._take_screenshot(f"crash_{func_name}_{attempt}")
         logger.warning(
-            "firefox_crash",
-            func=func_name,
-            attempt=attempt,
-            screenshot=str(screenshot_path),
+            "firefox_crash func=%s attempt=%s screenshot=%s",
+            func_name,
+            attempt,
+            screenshot_path,
         )
 
         # Consultar Gemini para decisão de recovery (se disponível)
@@ -222,7 +222,7 @@ class BrowserManager:
             try:
                 self._ask_llm_for_recovery(screenshot_path, func_name)
             except Exception as e:
-                logger.debug("llm_recovery_query_failed", error=str(e))
+                logger.debug("llm_recovery_query_failed: %s", e)
 
         # Reiniciar browser em thread nova (evita conflito com asyncio)
         return self._restart_browser_in_fresh_thread()
@@ -247,7 +247,7 @@ class BrowserManager:
         t.join(timeout=30)
 
         if errors:
-            logger.error("browser_restart_failed", error=str(errors[0]))
+            logger.error("browser_restart_failed: %s", errors[0])
             return False
 
         logger.info("browser_restarted")
@@ -264,7 +264,7 @@ class BrowserManager:
             self._page.screenshot(path=str(path), full_page=True)
             return path
         except Exception as e:
-            logger.debug("screenshot_failed", error=str(e))
+            logger.debug("screenshot_failed: %s", e)
             return None
 
     def _ask_llm_for_recovery(self, screenshot_path: Path, context: str) -> None:
@@ -294,4 +294,4 @@ class BrowserManager:
             inject_learned_rules=False,
             timeout=30,
         )
-        logger.info("llm_crash_recovery_suggestion", suggestion=str(result)[:300])
+        logger.info("llm_crash_recovery_suggestion: %s", str(result)[:300])
